@@ -1,9 +1,17 @@
 #include <Arduino.h>
 #include "config.h"
+#include "logging.h"
 
 void setup() {
-  Serial.begin(SERIAL_BAUD);
-  // pas d'accès hardware ici — juste un ping sur la console plus tard
+  initLogging();
+  LOG("hello from Lab 0.2-F");
 }
 
-void loop() { }
+void loop() {
+  static uint32_t last = 0;
+  uint32_t now = millis();
+  if (now - last >= 1000) {
+    last = now;
+    LOG("tick");
+  }
+}
