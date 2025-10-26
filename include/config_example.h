@@ -2,7 +2,7 @@
 
 // ===== Identité du build =====
 #define PROJECT_NAME    "GOAL_RHI"
-#define PROJECT_VERSION "v0.2-lab0.2D"
+#define PROJECT_VERSION "v0.2.1-testlink"
 
 // ===== Série (logs) =====
 #define SERIAL_BAUD     115200
