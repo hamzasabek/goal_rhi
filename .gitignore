@@ -7,5 +7,4 @@ data/*.csv
 include/config.h
 Documentation
 Material
-docs/LABS.md
-docs/CONTEXT.md
+docs
