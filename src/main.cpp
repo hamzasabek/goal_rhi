@@ -9,7 +9,7 @@ ServoBus   servos;
 
 void setup() {
   initLogging();
-  LOG("drivers: setup");
+  LOG("hello from permalink smoke test drivers: setup");
 
   // IMU (squelette)
   imu.setAxisFromConfig();
