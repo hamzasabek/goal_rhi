@@ -1,41 +1,30 @@
 #include <Arduino.h>
-#include "config.h"
-#include "logging.h"
-#include "drivers/imu.h"
-#include "drivers/servo.h"
+#include "Config.h"
+#include "Drivers.h"
+#include "Sensors.h"
+#include "Logging.h"
+#include "Experiment.h"
 
-ImuDriver  imu;
-ServoBus   servos;
+int numeroEssaiActuel = 0; // Compteur pour savoir quel essai on est en train de faire
 
+// ==========================================
+// 7. SETUP ET LOOP PRINCIPALE
+// ==========================================
 void setup() {
-  initLogging();
-  LOG("hello from permalink smoke test drivers: setup");
-
-  // IMU (squelette)
-  imu.setAxisFromConfig();
-  bool imu_ok = imu.begin();
-  LOGF("IMU begin: %s", imu_ok ? "OK" : "FAIL");
-
-  // Servos (squelette)
-  bool pca_ok = servos.begin();
-  LOGF("PCA begin: %s", pca_ok ? "OK" : "FAIL");
-
-  // centrer (virtuellement) les 3 servos
-  servos.center3();
-  LOG("servos: centered (virtual)");
+  Serial.begin(115200); // Démarrer la communication série rapide
+  
+  initDrivers();        // Initialise le PCA9685 et les vibreurs
+  initSensors();        // Initialise les boutons
+  preparerListeEssais();// Crée et mélange la liste des 10 essais
+  initLogging();        // Affiche l'en-tête CSV
 }
 
 void loop() {
-  // Boucle "compile-only": on simule la vie
-  static uint32_t last = 0;
-  uint32_t now = millis();
-  if (now - last >= 1000) {
-    last = now;
-    imu.update(); // (ne fait rien pour l'instant)
-    LOGF("heartbeat | theta_deg=%.2f | S0=%u S1=%u S2=%u",
-         imu.angleDeg(),
-         servos.lastUS(SERVO_CH_0),
-         servos.lastUS(SERVO_CH_1),
-         servos.lastUS(SERVO_CH_2));
+  if (!experienceTerminee(numeroEssaiActuel)) { // Si on n'a pas encore fini les 10 essais
+    executerUnEssai(numeroEssaiActuel); // Faire l'essai
+    numeroEssaiActuel++; // Passer au numéro suivant
+  } else { // Si c'est fini
+    Serial.println("EXPÉRIENCE TERMINÉE"); // Message de fin
+    while(1); // Bloquer le programme ici
   }
 }
