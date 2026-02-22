@@ -23,8 +23,9 @@ void gererVibrations(bool etat) {
   }
 }
 
-void bougerMainCaoutchouc(int angle) {
-  // Conversion de l'angle (0-180) en signal PWM PCA (150-600 ticks environ)
-  int pulse = map(angle, 0, 180, 150, 600);
-  pca.setPWM(canalServoPCA, 0, pulse); // Faire bouger la main via le PCA9685
+void bougerMainCaoutchouc(float angle) {
+  // On garde la conversion pour le PCA9685
+  // Rappel : l'angle arrive ici déjà traité (entre 0 et 180)
+  int pulse = map((int)angle, 0, 180, 150, 600);
+  pca.setPWM(canalServoPCA, 0, pulse); 
 }
