@@ -12,7 +12,7 @@ int numeroEssaiActuel = 0; // Compteur pour savoir quel essai on est en train de
 // ==========================================
 void setup() {
   Serial.begin(115200); // Démarrer la communication série rapide
-  
+  while (!Serial);
   initDrivers();        // Initialise le PCA9685 et les vibreurs
   initSensors();        // Initialise les boutons
   preparerListeEssais();// Crée et mélange la liste des 10 essais
