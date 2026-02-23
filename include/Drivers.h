@@ -3,4 +3,4 @@
 
 void initDrivers();
 void gererVibrations(bool etat);
-void bougerMainCaoutchouc(int angle);
+void bougerMainCaoutchouc(float angle);

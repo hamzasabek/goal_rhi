@@ -7,20 +7,19 @@
 // VARIABLES GLOBALES (Expérience)
 // ==========================================
 Essai listeEssais[10];              // Tableau contenant les 10 essais de l'expérience
-int memoirePositions[tailleBuffer]; // Tableau pour stocker les positions passées (Buffer)
+float memoirePositions[tailleBuffer]; // Tableau pour stocker les positions passées (Buffer)
 int indexEcriture = 0;              // Position actuelle où l'on écrit dans la mémoire
 
 // Fonction pour enregistrer la position et récupérer la position retardée
-int calculerPositionRetardee(int valeurActuelle, int delaiMs) {
-  int angle = map(valeurActuelle, 0, 1023, 0, 180); // Transformer la valeur 0-1023 en angle 0-180
-  memoirePositions[indexEcriture] = angle; // Enregistrer cet angle dans la mémoire (buffer)
+float calculerPositionRetardee(float valeurActuelle, int delaiMs) {
+  memoirePositions[indexEcriture] = valeurActuelle; // Enregistrer cet angle dans la mémoire (buffer)
   
   int casesAReculer = delaiMs / 20; // Calculer de combien de cases on doit reculer (1 case = 20ms)
   int indexLecture = (indexEcriture - casesAReculer + tailleBuffer) % tailleBuffer; // Calculer l'index du passé
   
   indexEcriture = (indexEcriture + 1) % tailleBuffer; // Avancer l'index d'écriture pour la prochaine fois
   
-  return memoirePositions[indexLecture]; // Renvoyer la vieille position enregistrée
+  return memoirePositions[indexLecture]; // Renvoyer l'angle retardé (0-90°)
 }
 
 void preparerListeEssais() {
@@ -54,29 +53,37 @@ bool experienceTerminee(int numeroEssaiActuel) {
 // ==========================================
 void executerUnEssai(int numeroEssaiActuel) {
   Essai essaiEnCours = listeEssais[numeroEssaiActuel];
-  unsigned long chronoDebut = millis(); // Noter l'heure de début
+  unsigned long chronoDebut = millis(); 
   
-  reinitialiserMouvements(); // Remettre le compteur de mouvements à zéro et réinitialiser l'état du doigt
-  gererVibrations(essaiEnCours.vibrationActive); // Allumer les vibreurs si nécessaire
+  // Nouveau chrono interne pour remplacer le delay(20)
+  unsigned long dernierTempsBoucle = millis(); 
 
-  // Boucle de mouvement : on continue tant que les deux conditions ne sont pas atteintes
+  reinitialiserMouvements(); 
+  gererVibrations(essaiEnCours.vibrationActive); 
+
   while (getMouvementsEffectues() < nombreMouvementsRequis && (millis() - chronoDebut) < tempsMaximumEssai) {
-    int lecturePot = lirePotentiometre(); // Lire la position du doigt
-    
-    mettreAJourCompteurMouvement(lecturePot); // Vérifier si un mouvement est fait
-    
-    int angleRetarde = calculerPositionRetardee(lecturePot, essaiEnCours.delaiMs); // Calculer le retard
-    bougerMainCaoutchouc(angleRetarde); // Faire bouger la main via le PCA9685
-    
-    delay(20); // Attendre 20ms pour avoir une fréquence stable de 50Hz
+
+    // On vérifie s'il s'est écoulé au moins 20ms depuis le dernier mouvement
+    if (millis() - dernierTempsBoucle >= 20) {
+      dernierTempsBoucle = millis(); // On remet le chrono à zéro
+
+      float lectureAngle = lireAngleDoigt(); // Lit l'IMU (qui se met à jour en tâche de fond)
+      
+      mettreAJourCompteurMouvement(lectureAngle); 
+      
+      float angleRetarde = calculerPositionRetardee(lectureAngle, essaiEnCours.delaiMs); 
+      bougerMainCaoutchouc(angleRetarde); 
+    }
+    // AUCUN DELAY ICI ! La boucle tourne à des millions de cycles par seconde, 
+    // ce qui laisse le temps au capteur de s'exprimer sur l'I2C.
   }
 
-  gererVibrations(false); // Éteindre les vibreurs à la fin du mouvement
-  unsigned long tempsFinal = millis() - chronoDebut; // Calculer le temps total écoulé
+  gererVibrations(false); 
+  unsigned long tempsFinal = millis() - chronoDebut; 
   
-  int reponseParticipant = obtenirReponse(); // Demander si la main était la sienne
+  int reponseParticipant = obtenirReponse(); 
   
-  envoyerResultats(essaiEnCours, numeroEssaiActuel, getMouvementsEffectues(), tempsFinal, reponseParticipant); // Enregistrer
+  envoyerResultats(essaiEnCours, numeroEssaiActuel, getMouvementsEffectues(), tempsFinal, reponseParticipant); 
   
-  delay(1000); // Petite pause avant l'essai suivant
+  delay(1000); // Ici c'est hors mouvement, on a le droit de mettre un delay :)
 }

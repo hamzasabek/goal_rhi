@@ -2,9 +2,11 @@
 #include <Wire.h> // Nécessaire pour la communication I2C
 #include <Adafruit_PWMServoDriver.h> // Bibliothèque pour le PCA9685
 
-Adafruit_PWMServoDriver pca = Adafruit_PWMServoDriver(); // Création de l'objet PCA
+Adafruit_PWMServoDriver pca = Adafruit_PWMServoDriver(0x40, Wire2); // Création de l'objet PCA
 
 void initDrivers() {
+  Wire2.begin();
+  Wire2.setClock(100000);
   pca.begin();          // Initialiser le driver PCA9685
   pca.setPWMFreq(50);   // Servos standards fonctionnent à 50Hz
   
@@ -24,8 +26,12 @@ void gererVibrations(bool etat) {
 }
 
 void bougerMainCaoutchouc(float angle) {
-  // On garde la conversion pour le PCA9685
-  // Rappel : l'angle arrive ici déjà traité (entre 0 et 180)
-  int pulse = map((int)angle, 0, 180, 150, 600);
+  // L'angle reçu de Sensors.cpp est maintenant entre 0 et 90.
+  // On le mappe sur la course physique de ton servo (de 150 à 600)
+  int pulse = map((int)angle, 0, 90, 150, 600);
+  
+  // SÉCURITÉ : On s'assure de ne jamais forcer le moteur au-delà de ses limites
+  pulse = constrain(pulse, 150, 600); 
+  
   pca.setPWM(canalServoPCA, 0, pulse); 
 }

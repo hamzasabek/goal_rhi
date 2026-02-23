@@ -2,8 +2,10 @@
 #include "Config.h"
 
 void initSensors();
+float lireAngleDoigt();
+float lireIMU();
 int lirePotentiometre();
 void reinitialiserMouvements();
-void mettreAJourCompteurMouvement(int valeurPot);
+void mettreAJourCompteurMouvement(float angle);
 int getMouvementsEffectues();
 int obtenirReponse();
