@@ -26,12 +26,18 @@ void gererVibrations(bool etat) {
 }
 
 void bougerMainCaoutchouc(float angle) {
-  // L'angle reçu de Sensors.cpp est maintenant entre 0 et 90.
-  // On le mappe sur la course physique de ton servo (de 150 à 600)
-  int pulse = map((int)angle, 0, 90, 150, 600);
+  // 1. INVERSION : On transforme l'angle pour le moteur
+  // Si ton doigt est à 0 (repos), le moteur reçoit 90 (haut pour lui).
+  // Si ton doigt est à 90 (levé), le moteur reçoit 0 (bas pour lui).
+  float anglePourMoteur = 90.0 - angle;
+
+  // 2. CONVERSION : On transforme cet angle en signal PWM (Pulse)
+  // On garde ici le map standard 0->150 et 90->600
+  int pulse = map((int)anglePourMoteur, 0, 90, 150, 600);
   
-  // SÉCURITÉ : On s'assure de ne jamais forcer le moteur au-delà de ses limites
+  // 3. SÉCURITÉ : On ne dépasse pas les bornes du PCA9685
   pulse = constrain(pulse, 150, 600); 
   
+  // 4. ENVOI :
   pca.setPWM(canalServoPCA, 0, pulse); 
 }

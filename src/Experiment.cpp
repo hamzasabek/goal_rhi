@@ -24,7 +24,7 @@ float calculerPositionRetardee(float valeurActuelle, int delaiMs) {
 
 void preparerListeEssais() {
   // Remplissage de la liste des essais
-  int d[] = {0, 50, 150, 300, 500}; // Liste des délais possibles
+  int d[] = {0, 0, 0, 0, 0}; // Liste des délais possibles
   int index = 0; // Index pour remplir le tableau
   for (int i = 0; i < 5; i++) { // Pour chaque délai
     for (int j = 0; j < 2; j++) { // Pour chaque état de vibration (0 ou 1)

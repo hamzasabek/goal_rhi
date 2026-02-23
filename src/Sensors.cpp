@@ -54,11 +54,11 @@ float lireAngleDoigt() {
         float angleAbsolu = lireIMU(); 
         
         // On soustrait le "zéro" de calibration pour avoir un angle qui part de 0 !
-        float angleRelatif = angleAbsolu - angleZeroIMU;
+        float angleRelatif =  angleAbsolu - angleZeroIMU;
         
         // Sécurité : on empêche l'angle d'être négatif (si le participant baisse le doigt en dessous du 0)
         // et on le limite à 90° maximum.
-        return constrain(angleRelatif, 0, 90); 
+        return angleRelatif;
         
     } else {
         int brute = lirePotentiometre(); 
