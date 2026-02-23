@@ -27,22 +27,46 @@ void initSensors() {
   }
 }
 
-float lireAngleDoigt() {
-    if (CAPTEUR_ACTUEL == IMU_BNO085) {
-        float angleBrut = lireIMU(); // Ça donne environ de -45° à +45°
-        
-        // On convertit les angles de l'IMU vers l'échelle 0-90° pour le servo
-        float angleConverti = map(angleBrut, -45, 45, 0, 90);
-        
-        // On s'assure que ça ne dépasse jamais les limites physiques du servo
-        return constrain(angleConverti, 0, 90); 
-        
-    } else {
-        int brute = lirePotentiometre(); // 0-1023
-        return map(brute, 0, 1023, 0, 90); 
+// Nouvelle variable pour stocker la position de repos
+float angleZeroIMU = 0.0;
+
+void calibrerCapteur() {
+  Serial.println("Calibration du capteur... Laissez le doigt au repos !");
+  
+  if (CAPTEUR_ACTUEL == IMU_BNO085) {
+    // On fait quelques lectures rapides pour vider les anciennes données du capteur
+    // et s'assurer d'avoir la position actuelle stable
+    for(int i = 0; i < 10; i++) {
+      lireIMU();
+      delay(5);
     }
+    angleZeroIMU = lireIMU(); // On enregistre la position actuelle comme le "zéro"
+    Serial.print("Nouvelle position 0 fixée a : ");
+    Serial.println(angleZeroIMU);
+  } else {
+    // Si un jour tu repasses sur le potentiomètre
+    angleZeroIMU = lirePotentiometre();
+  }
 }
 
+float lireAngleDoigt() {
+    if (CAPTEUR_ACTUEL == IMU_BNO085) {
+        float angleAbsolu = lireIMU(); 
+        
+        // On soustrait le "zéro" de calibration pour avoir un angle qui part de 0 !
+        float angleRelatif = angleAbsolu - angleZeroIMU;
+        
+        // Sécurité : on empêche l'angle d'être négatif (si le participant baisse le doigt en dessous du 0)
+        // et on le limite à 90° maximum.
+        return constrain(angleRelatif, 0, 90); 
+        
+    } else {
+        int brute = lirePotentiometre(); 
+        int relatif = brute - (int)angleZeroIMU;
+        // On convertit pour le potentiomètre
+        return constrain(map(relatif, 0, 1023, 0, 90), 0, 90); 
+    }
+}
 
 float lireIMU() {
   if (bno08x.wasReset()) {

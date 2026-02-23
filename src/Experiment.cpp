@@ -53,9 +53,34 @@ bool experienceTerminee(int numeroEssaiActuel) {
 // ==========================================
 void executerUnEssai(int numeroEssaiActuel) {
   Essai essaiEnCours = listeEssais[numeroEssaiActuel];
-  unsigned long chronoDebut = millis(); 
   
-  // Nouveau chrono interne pour remplacer le delay(20)
+  Serial.print("\n========================================\n");
+  Serial.print("=== PRÉPARATION DE L'ESSAI ");
+  Serial.print(numeroEssaiActuel + 1);
+  Serial.println(" ===");
+
+  // 1. Mettre le servo (doigt en caoutchouc) en position initiale (0°)
+  bougerMainCaoutchouc(0);
+  delay(300); // Laisse le temps au servo de se remettre en place
+  
+  // 2. Calibrer le capteur du participant sur son nouveau "zéro"
+  calibrerCapteur();
+
+  // 3. Attendre le signal de départ de l'expérimentateur
+  Serial.println("\n>>> TAPEZ 'd' ET FAITES ENTRÉE POUR DÉMARRER L'ESSAI <<<");
+  while (true) {
+    if (Serial.available() > 0) {
+      char touche = Serial.read();
+      if (touche == 'd' || touche == 'D') {
+        Serial.println(">>> DÉMARRAGE DE L'ESSAI ! <<<");
+        break; // On sort de la boucle infinie d'attente
+      }
+    }
+    delay(10); // Petite pause pour ne pas surcharger la boucle d'attente
+  }
+
+  // --- LE RESTE DU CODE RESTE INCHANGÉ ---
+  unsigned long chronoDebut = millis(); 
   unsigned long dernierTempsBoucle = millis(); 
 
   reinitialiserMouvements(); 
@@ -63,19 +88,16 @@ void executerUnEssai(int numeroEssaiActuel) {
 
   while (getMouvementsEffectues() < nombreMouvementsRequis && (millis() - chronoDebut) < tempsMaximumEssai) {
 
-    // On vérifie s'il s'est écoulé au moins 20ms depuis le dernier mouvement
     if (millis() - dernierTempsBoucle >= 20) {
-      dernierTempsBoucle = millis(); // On remet le chrono à zéro
+      dernierTempsBoucle = millis(); 
 
-      float lectureAngle = lireAngleDoigt(); // Lit l'IMU (qui se met à jour en tâche de fond)
+      float lectureAngle = lireAngleDoigt(); 
       
       mettreAJourCompteurMouvement(lectureAngle); 
       
       float angleRetarde = calculerPositionRetardee(lectureAngle, essaiEnCours.delaiMs); 
       bougerMainCaoutchouc(angleRetarde); 
     }
-    // AUCUN DELAY ICI ! La boucle tourne à des millions de cycles par seconde, 
-    // ce qui laisse le temps au capteur de s'exprimer sur l'I2C.
   }
 
   gererVibrations(false); 
@@ -85,5 +107,5 @@ void executerUnEssai(int numeroEssaiActuel) {
   
   envoyerResultats(essaiEnCours, numeroEssaiActuel, getMouvementsEffectues(), tempsFinal, reponseParticipant); 
   
-  delay(1000); // Ici c'est hors mouvement, on a le droit de mettre un delay :)
+  delay(1000); 
 }
